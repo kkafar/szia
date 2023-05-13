@@ -1,0 +1,5 @@
+package smartbuilding
+
+object Room {
+
+}

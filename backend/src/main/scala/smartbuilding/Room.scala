@@ -1,5 +1,0 @@
-package smartbuilding
-
-object Room {
-
-}

@@ -48,7 +48,15 @@ object Auctioneer {
     }
 
     def findClearingPrice(offers: List[AuctionOffer]): Int = {
-      offers.map(_.price).head
+      val prices = offers.map(_.price)
+      val differences = for {
+        p <- prices
+        (sellOffers, buyOffers) = offers.partition(_.sell)
+        sellSum = sellOffers.filter(_.price <= p).foldLeft(0.0)(_ + _.volume)
+        buySum = buyOffers.filter(_.price >= p).foldLeft(0.0)(_ + _.volume)
+      } yield (sellSum - buySum).abs
+
+      prices.zip(differences).minBy(_._2)._1
     }
 
     work(1)

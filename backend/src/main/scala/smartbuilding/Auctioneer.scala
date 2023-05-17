@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
 import akka.util.Timeout
+import smartbuilding.RoomAgent.{OfferAccepted, OfferDeclined}
 import smartbuilding.SmartBuildingApp.actorSystem.executionContext
 
 import java.time.Instant
@@ -36,7 +37,13 @@ object Auctioneer {
       Try(Await.result(Future.sequence(futureResponses), Duration(epochDuration, SECONDS))) match {
         case Success(responses: List[AuctionOffer]) =>
           val price = findClearingPrice(responses)
-          roomAgents.foreach(_ ! RoomAgent.AuctionFinished(price))
+
+          roomAgents.zip(responses).foreach {case (agent, offer) =>
+            if (offer.sell && offer.price <= price) agent ! OfferAccepted(-offer.volume)
+            else if (!offer.sell && offer.price >= price) agent ! OfferAccepted(offer.volume)
+            else agent ! OfferDeclined()
+          }
+
           val now = Instant.now()
           if (now.isBefore(deadline)) Thread.sleep(deadline.toEpochMilli - now.toEpochMilli)
           context.log.info(s"Finished auction $auctionNumber with clearing price $price.")

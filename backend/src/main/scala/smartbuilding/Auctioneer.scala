@@ -4,20 +4,18 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
 import akka.util.Timeout
-import smartbuilding.RoomAgent.{OfferAccepted, OfferDeclined}
+import smartbuilding.RoomAgent.OfferResult
 import smartbuilding.SmartBuildingApp.actorSystem.executionContext
 
 import java.time.Instant
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, SECONDS}
 import scala.concurrent.{Await, Future}
-import scala.util.{Random, Success, Try}
+import scala.util.{Success, Try}
 
 object Auctioneer {
   sealed trait Command
   case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int) extends Command
-
-  private val rand = new Random()
 
   def apply(
       epochDuration: Long,
@@ -38,10 +36,10 @@ object Auctioneer {
         case Success(responses: List[AuctionOffer]) =>
           val price = findClearingPrice(responses)
 
-          roomAgents.zip(responses).foreach {case (agent, offer) =>
-            if (offer.sell && offer.price <= price) agent ! OfferAccepted(-offer.volume)
-            else if (!offer.sell && offer.price >= price) agent ! OfferAccepted(offer.volume)
-            else agent ! OfferDeclined()
+          roomAgents.zip(responses).foreach { case (agent, offer) =>
+            if (offer.sell && offer.price <= price) agent ! OfferResult(-offer.volume)
+            else if (!offer.sell && offer.price >= price) agent ! OfferResult(offer.volume)
+            else agent ! OfferResult(0.0)
           }
 
           val now = Instant.now()
@@ -49,7 +47,7 @@ object Auctioneer {
           context.log.info(s"Finished auction $auctionNumber with clearing price $price.")
           work(auctionNumber + 1)
         case _ =>
-          context.log.error("Unable to finish auction")
+          context.log.error("Unable to finish the auction")
           work(auctionNumber + 1)
       }
     }

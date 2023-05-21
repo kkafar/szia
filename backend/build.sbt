@@ -5,6 +5,7 @@ version := "1.0"
 scalaVersion := "2.13.1"
 
 lazy val akkaVersion = "2.8.2"
+lazy val akkaHttpVersion = "10.5.2"
 
 // Run in a separate JVM, to make sure sbt waits until all threads have
 // finished before returning.
@@ -18,4 +19,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
   "org.scalatest" %% "scalatest" % "3.2.15" % Test,
   "com.typesafe" % "config" % "1.4.2",
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
 )

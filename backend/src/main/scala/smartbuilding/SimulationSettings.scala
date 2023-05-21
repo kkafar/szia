@@ -8,7 +8,10 @@ case class BuildingSettings(thermalCapacity: Double, thermalResistance: Double)
 
 case class RoomSettings(defaultTemperature: Double, desiredTemperature: Double)
 
+case class ServerSettings(host: String, port: Int)
+
 case class SimulationSettings(
+    serverSettings: ServerSettings,
     epochDuration: Long,
     buildingSettings: BuildingSettings,
     roomSettings: Map[String, RoomSettings]
@@ -16,6 +19,9 @@ case class SimulationSettings(
 
 object SimulationSettings {
   def fromConfig(config: Config): SimulationSettings = {
+    val serverObject = config.getConfig("server")
+    val serverSettings = ServerSettings(serverObject.getString("host"), serverObject.getInt("port"))
+
     val epochDuration = config.getLong("epochDuration")
 
     val buildingObject = config.getConfig("building")
@@ -33,6 +39,6 @@ object SimulationSettings {
       )
     }.toMap
 
-    SimulationSettings(epochDuration, buildingSettings, roomSettings)
+    SimulationSettings(serverSettings, epochDuration, buildingSettings, roomSettings)
   }
 }

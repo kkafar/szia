@@ -1,23 +1,34 @@
 package smartbuilding
 
+import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorSystem, Behavior, PostStop}
+import akka.actor.typed.{ActorSystem, Behavior, PostStop, Scheduler}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import akka.http.scaladsl.server.Directives.complete
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
+import akka.util.Timeout
+import smartbuilding.RoomAgent.GetInfo
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-object SimulationManager {
+object SimulationManager extends JsonSupport {
   sealed trait Message
   private final case class StartFailed(cause: Throwable) extends Message
   private final case class Started(binding: ServerBinding) extends Message
   case object Stop extends Message
 
+  sealed trait Response
+  case class RoomResponse(state: RoomState, settings: RoomSettings) extends Response
+
   def apply(settings: SimulationSettings): Behavior[Message] =
     Behaviors.setup { context =>
       implicit val system: ActorSystem[Nothing] = context.system
+      implicit val timeout: Timeout = Timeout(3 seconds)
+      implicit val scheduler: Scheduler = context.system.scheduler
 
       val roomAgents = settings.roomSettings.map { case (id, roomSettings) =>
         (id, context.spawn(RoomAgent(id, settings.buildingSettings, roomSettings), id))
@@ -25,7 +36,20 @@ object SimulationManager {
       val auctioneer =
         context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList), "auctioneer")
 
-      val routes = complete("server works!!1")
+      val routes = get {
+        concat {
+          pathPrefix("room" / Remaining) { id =>
+            roomAgents.get(id) match {
+              case Some(agent) =>
+                onComplete(agent.ask(GetInfo)) {
+                  case Failure(exception)                                => failWith(exception)
+                  case Success(response @ RoomResponse(state, settings)) => complete(response)
+                }
+              case None => complete(StatusCodes.NotFound)
+            }
+          }
+        }
+      }
 
       val serverBinding: Future[Http.ServerBinding] =
         Http().newServerAt(settings.serverSettings.host, settings.serverSettings.port).bind(routes)

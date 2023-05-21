@@ -21,4 +21,5 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.4.2",
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
 )

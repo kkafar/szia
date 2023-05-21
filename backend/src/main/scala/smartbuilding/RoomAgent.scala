@@ -2,6 +2,7 @@ package smartbuilding
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
+import smartbuilding.SimulationManager.RoomResponse
 
 object RoomAgent {
   import Auctioneer.AuctionOffer
@@ -10,6 +11,7 @@ object RoomAgent {
   sealed trait Command
   case class AuctionInitialized(auctioneer: ActorRef[Auctioneer.Command]) extends Command
   case class OfferResult(volume: Double) extends Command
+  case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
 
   def apply(
       id: String,
@@ -29,7 +31,9 @@ object RoomAgent {
             work(state)
           case OfferResult(volume) =>
             work(updateState(state, volume))
-
+          case GetInfo(replyTo) =>
+            replyTo ! RoomResponse(state, roomSettings)
+            work(state)
         }
 
       def makeOffer(state: RoomState) = {

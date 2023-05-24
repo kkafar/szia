@@ -32,7 +32,7 @@ object RoomAgent {
           case OfferResult(volume) =>
             work(updateState(state, volume))
           case GetInfo(replyTo) =>
-            replyTo ! RoomResponse(state, roomSettings)
+            replyTo ! RoomResponse(id, state, roomSettings)
             work(state)
         }
 

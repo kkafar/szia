@@ -27,7 +27,7 @@ object SimulationManager extends JsonSupport {
 
   sealed trait Response
 
-  case class RoomResponse(state: RoomState, settings: RoomSettings) extends Response
+  case class RoomResponse(name: String, state: RoomState, settings: RoomSettings) extends Response
 
   def apply(settings: SimulationSettings): Behavior[Message] =
     Behaviors.setup { context =>
@@ -49,7 +49,7 @@ object SimulationManager extends JsonSupport {
                 case Some(agent) =>
                   onComplete(agent.ask(GetInfo)) {
                     case Failure(exception) => failWith(exception)
-                    case Success(response@RoomResponse(state, settings)) => complete(response)
+                    case Success(response@RoomResponse(name, state, settings)) => complete(response)
                   }
                 case None => complete(StatusCodes.NotFound)
               }

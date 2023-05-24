@@ -10,5 +10,5 @@ trait JsonSupport extends SprayJsonSupport {
 
   implicit val roomSettingsFormat: RootJsonFormat[RoomSettings] = jsonFormat2(RoomSettings.apply)
   implicit val roomStateFormat: RootJsonFormat[RoomState] = jsonFormat3(RoomState.apply)
-  implicit val roomResponseFormat: RootJsonFormat[RoomResponse] = jsonFormat2(RoomResponse.apply)
+  implicit val roomResponseFormat: RootJsonFormat[RoomResponse] = jsonFormat3(RoomResponse.apply)
 }

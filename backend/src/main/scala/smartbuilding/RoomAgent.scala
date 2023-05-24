@@ -48,7 +48,7 @@ object RoomAgent {
         val powerAvailable = state.powerAvailable + volume
         val output = updateControllerOutput(state)
         val powerConsumed = Math.min(output, powerAvailable)
-        val temperature = updateTemperature(state, powerConsumed)
+        val temperature = updateTemperature(state, -powerConsumed)
         context.log.info(s"Agent $id was offered $volume of heat, pa: $powerAvailable, output: $output, pc: $powerConsumed")
         RoomState(powerAvailable, powerConsumed, temperature)
       }

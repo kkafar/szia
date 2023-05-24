@@ -15,3 +15,7 @@
 .Room-filler {
   background-color: white;
 }
+
+.Room-list {
+  padding-left: 12px;
+}

@@ -1,6 +1,5 @@
 import { RoomInfo } from "../types";
 import '../styles/Room.css';
-import { useState } from "react";
 
 export default function Room(props: RoomInfo) {
   function resolveBgColor() {
@@ -14,6 +13,7 @@ export default function Room(props: RoomInfo) {
   return (
     <div className="Room">
       <div className="Room-content" style={{ backgroundColor: resolveBgColor() }}>
+      <div className="Room-list">
         <p>ID: {props.name ?? "Unknown"}</p>
         <ul>
           <li>Default temperature: {props.settings.defaultTemperature.toFixed(2)}</li>
@@ -22,6 +22,7 @@ export default function Room(props: RoomInfo) {
           <li>Power consumed: {props.state.powerConsumed.toFixed(2)}</li>
           <li>Current temperature: {props.state.temperature.toFixed(2)}</li>
         </ul>
+      </div>
       </div>
       <div className="Room-filler">
 

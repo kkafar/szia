@@ -1,0 +1,21 @@
+.Room {
+  /* background-color: red;  */
+  /* font-size: calc(10px + 2vmin); */
+  margin: 10px;
+  display: flex;
+}
+
+.Room-content {
+  background-color: red;
+  font-size: calc(10px + 2vmin);
+  border-radius: 10px;
+  width: 40%;
+}
+
+.Room-filler {
+  background-color: white;
+}
+
+.Room-list {
+  padding-left: 12px;
+}

@@ -10,6 +10,7 @@ export type RoomState = {
 }
 
 export type RoomInfo = {
+  name: string,
   settings: RoomSettings,
   state: RoomState,
 }

@@ -4,8 +4,7 @@ import './App.css';
 import { RoomInfo } from './types';
 import axios from 'axios';
 import RoomList from './components/RoomList';
-
-const SERVER_URL = "http://localhost:8080";
+import config from './config.json';
 
 
 function App() {
@@ -25,7 +24,7 @@ function App() {
         roomIds.map((id) => {
           return axios({
             method: 'get',
-            baseURL: SERVER_URL,
+            baseURL: config.backendEndpointUrl,
             url: '/room/' + id,
             headers: {
               'Access-Control-Allow-Origin': 'localhost:8080',

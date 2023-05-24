@@ -40,7 +40,7 @@ object RoomAgent {
         val diff = roomSettings.desiredTemperature - state.temperature
         val sell = !shouldHeat(state)
         val volume = 3 * (diff / 20.0)
-        val price = if (sell) 10 else 100 // 7.2 - deleting the temperature dependency
+        val price = if (sell) 10 else 10 // 7.2 - deleting the temperature dependency
         AuctionOffer(id, sell, volume, price)
       }
 
@@ -48,7 +48,8 @@ object RoomAgent {
         val powerAvailable = state.powerAvailable + volume
         val output = updateControllerOutput(state)
         val powerConsumed = Math.min(output, powerAvailable)
-        val temperature = updateTemperature(state, powerConsumed)
+        val temperature = updateTemperature(state, -powerConsumed)
+        context.log.info(s"Agent $id was offered $volume of heat, pa: $powerAvailable, output: $output, pc: $powerConsumed")
         RoomState(powerAvailable, powerConsumed, temperature)
       }
 
@@ -60,7 +61,10 @@ object RoomAgent {
 
       def updateTemperature(state: RoomState, powerConsumed: Double) = {
         val paceFactor = 1 / (1 + (1 / (resistance * capacity)))
-        paceFactor * (state.temperature + ((roomSettings.defaultTemperature / resistance) - powerConsumed) / capacity)
+        val oldTemperature = state.temperature
+        val newTemperature = paceFactor * (state.temperature + ((roomSettings.defaultTemperature / resistance) - powerConsumed) / capacity)
+        context.log.info(s"Agent $id consumed $powerConsumed to update temp by ${newTemperature - oldTemperature}")
+        newTemperature
       }
 
       def shouldHeat(state: RoomState) = state.temperature < roomSettings.desiredTemperature

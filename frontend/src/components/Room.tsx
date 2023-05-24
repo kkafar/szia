@@ -1,9 +1,26 @@
 import { RoomInfo } from "../types";
 import '../styles/Room.css';
+import uparrowImage from '../assets/up-arrow.svg';
+import downarrowImage from '../assets/down-arrow.svg';
+import { useEffect } from "react";
+
+type ListItemProps = {
+  title: string,
+  
+};
+
+function ListItem(props: ListItemProps) {
+    
+};
 
 export default function Room(props: RoomInfo) {
+
+  useEffect(() => {
+     
+  }, [props.state.temperature]);
+
   function resolveBgColor() {
-    if (Math.abs(props.state.temperature - props.settings.desiredTemperature) / props.settings.desiredTemperature <= 0.2) {
+    if (Math.abs(props.state.temperature - props.settings.desiredTemperature) / props.settings.desiredTemperature <= 0.1) {
       return '#a8c256';  
     } else {
       return '#ff6e52';

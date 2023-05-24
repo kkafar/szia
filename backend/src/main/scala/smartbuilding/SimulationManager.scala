@@ -8,6 +8,7 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import smartbuilding.RoomAgent.GetInfo
 
 import scala.concurrent.Future
@@ -17,11 +18,15 @@ import scala.util.{Failure, Success}
 
 object SimulationManager extends JsonSupport {
   sealed trait Message
+
   private final case class StartFailed(cause: Throwable) extends Message
+
   private final case class Started(binding: ServerBinding) extends Message
+
   case object Stop extends Message
 
   sealed trait Response
+
   case class RoomResponse(state: RoomState, settings: RoomSettings) extends Response
 
   def apply(settings: SimulationSettings): Behavior[Message] =
@@ -36,16 +41,18 @@ object SimulationManager extends JsonSupport {
       val auctioneer =
         context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList), "auctioneer")
 
-      val routes = get {
-        concat {
-          pathPrefix("room" / Remaining) { id =>
-            roomAgents.get(id) match {
-              case Some(agent) =>
-                onComplete(agent.ask(GetInfo)) {
-                  case Failure(exception)                                => failWith(exception)
-                  case Success(response @ RoomResponse(state, settings)) => complete(response)
-                }
-              case None => complete(StatusCodes.NotFound)
+      val routes = cors() {
+        get {
+          concat {
+            pathPrefix("room" / Remaining) { id =>
+              roomAgents.get(id) match {
+                case Some(agent) =>
+                  onComplete(agent.ask(GetInfo)) {
+                    case Failure(exception) => failWith(exception)
+                    case Success(response@RoomResponse(state, settings)) => complete(response)
+                  }
+                case None => complete(StatusCodes.NotFound)
+              }
             }
           }
         }
@@ -55,7 +62,7 @@ object SimulationManager extends JsonSupport {
         Http().newServerAt(settings.serverSettings.host, settings.serverSettings.port).bind(routes)
       context.pipeToSelf(serverBinding) {
         case Success(binding) => Started(binding)
-        case Failure(ex)      => StartFailed(ex)
+        case Failure(ex) => StartFailed(ex)
       }
 
       starting(false)

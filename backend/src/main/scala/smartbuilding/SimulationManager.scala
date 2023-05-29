@@ -11,6 +11,7 @@ import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import smartbuilding.RoomAgent.GetInfo
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -49,9 +50,30 @@ object SimulationManager extends JsonSupport {
                 case Some(agent) =>
                   onComplete(agent.ask(GetInfo)) {
                     case Failure(exception) => failWith(exception)
-                    case Success(response@RoomResponse(name, state, settings)) => complete(response)
+                    case Success(response @ RoomResponse(name, state, settings)) =>
+                      complete(response)
                   }
                 case None => complete(StatusCodes.NotFound)
+              }
+            }
+            path("metric") {
+              val roomInfos = roomAgents.values.map(_.ask(GetInfo))
+              onComplete(Future.sequence(roomInfos)) {
+                case Failure(exception) => failWith(exception)
+                case Success(responses: Iterable[RoomResponse]) =>
+                  val n = responses.size
+                  val desiredTemperatures = responses.map(_.settings.desiredTemperature)
+                  val actualTemperatures = responses.map(_.state.temperature)
+                  val avgDesired = desiredTemperatures.foldLeft(0.0)(_ + _) / n
+                  val avgActual = actualTemperatures.foldLeft(0.0)(_ + _) / n
+                  val variance =
+                    desiredTemperatures
+                      .zip(actualTemperatures)
+                      .map { case (actual, desired) =>
+                        Math.pow((actual - desired) - (avgActual - avgDesired), 2)
+                      }
+                      .foldLeft(0.0)(_ + _) / n
+                  complete(Math.sqrt(variance).toString)
               }
             }
           }
@@ -62,7 +84,7 @@ object SimulationManager extends JsonSupport {
         Http().newServerAt(settings.serverSettings.host, settings.serverSettings.port).bind(routes)
       context.pipeToSelf(serverBinding) {
         case Success(binding) => Started(binding)
-        case Failure(ex) => StartFailed(ex)
+        case Failure(ex)      => StartFailed(ex)
       }
 
       starting(false)

@@ -44,7 +44,7 @@ object SimulationManager extends JsonSupport {
 
       val routes = cors() {
         get {
-          concat {
+          concat(
             pathPrefix("room" / Remaining) { id =>
               roomAgents.get(id) match {
                 case Some(agent) =>
@@ -55,7 +55,7 @@ object SimulationManager extends JsonSupport {
                   }
                 case None => complete(StatusCodes.NotFound)
               }
-            }
+            },
             path("metric") {
               val roomInfos = roomAgents.values.map(_.ask(GetInfo))
               onComplete(Future.sequence(roomInfos)) {
@@ -76,7 +76,7 @@ object SimulationManager extends JsonSupport {
                   complete(Math.sqrt(variance).toString)
               }
             }
-          }
+          )
         }
       }
 

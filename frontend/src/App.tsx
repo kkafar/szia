@@ -5,6 +5,7 @@ import { RoomInfo } from './types';
 import axios from 'axios';
 import RoomList from './components/RoomList';
 import config from './config.json';
+import ScorePlot from './components/ScorePlot';
 
 
 function App() {
@@ -12,13 +13,10 @@ function App() {
   const [roomList, setRoomList] = useState<Array<RoomInfo>>([]);
 
   function updateState(data: Array<RoomInfo>) {
-    console.log("Updating state");
-    data.forEach(data => console.log(data));
     setRoomList(data);
   }
 
   const getData = async () => {
-    console.log("Fetching data");
     try {
       const result = await axios.all(
         roomIds.map((id) => {
@@ -52,6 +50,7 @@ function App() {
   return (
     <div className="App">
       <RoomList rooms={roomList} />
+      <ScorePlot />
     </div>
   );
 }

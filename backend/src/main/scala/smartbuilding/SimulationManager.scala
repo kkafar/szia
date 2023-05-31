@@ -3,6 +3,7 @@ package smartbuilding
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior, PostStop, Scheduler}
+import akka.http.impl.util.JavaMapping.HttpResponse
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes
@@ -12,7 +13,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.util.StatusPrinter
 import org.slf4j.{Logger, LoggerFactory}
-import smartbuilding.RoomAgent.GetInfo
+import smartbuilding.RoomAgent.{GetInfo, SetTargetTemp}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -54,7 +55,16 @@ object SimulationManager extends JsonSupport {
         context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList), "auctioneer")
 
       val routes = cors() {
-        pathPrefix("room" / IntNumber)
+        pathPrefix("room" / Remaining) { id =>
+          put {
+            roomAgents.get(id) match {
+              case Some(agent) =>
+                agent.tell(SetTargetTemp(40))
+                complete(StatusCodes.OK)
+              case None => complete(StatusCodes.NotFound)
+            }
+          }
+        } ~
         pathPrefix("room" / Remaining) { id =>
           get {
             roomAgents.get(id) match {
@@ -66,7 +76,7 @@ object SimulationManager extends JsonSupport {
                 }
               case None => complete(StatusCodes.NotFound)
             }
-          }
+          } ~
         } ~
         path("metric") {
           get {

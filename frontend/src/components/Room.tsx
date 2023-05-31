@@ -2,7 +2,8 @@ import { RoomInfo } from "../types";
 import '../styles/Room.css';
 import uparrowImage from '../assets/up-arrow.svg';
 import downarrowImage from '../assets/down-arrow.svg';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Plot from "react-plotly.js";
 
 type ListItemProps = {
   title: string,
@@ -14,9 +15,10 @@ function ListItem(props: ListItemProps) {
 };
 
 export default function Room(props: RoomInfo) {
+  const [data, setData] = useState<Array<number>>([])
 
   useEffect(() => {
-
+    setData((data) => [...data, props.state.temperature]);
   }, [props.state.temperature]);
 
   function resolveBgColor() {
@@ -28,7 +30,7 @@ export default function Room(props: RoomInfo) {
   }
 
   return (
-    <div className="Room">
+    <div className="Room" style={{ flexDirection: 'row' }}>
       <div className="Room-content" style={{ backgroundColor: resolveBgColor() }}>
         <div className="Room-list">
           <p>ID: {props.name ?? "Unknown"}</p>
@@ -41,8 +43,27 @@ export default function Room(props: RoomInfo) {
           </ul>
         </div>
       </div>
-      <div className="Room-filler">
-
+      <div>
+        <Plot
+          className="Room-plot"
+          data={[
+            {
+              x: data.map((d, i) => i),
+              y: data.map((d: number) => d.toFixed(2)),
+              type: 'scatter',
+              mode: 'lines+markers',
+              marker: { color: 'red' },
+              name: 'Temp',
+            },
+            {
+              x: data.map((d, i) => i), 
+              y: Array(data.length).fill(props.settings.desiredTemperature),
+              mode: 'lines',
+              name: 'Target',
+            }
+          ]}
+          layout={{ title: 'Temperature' }}
+        />
       </div>
     </div>
   );

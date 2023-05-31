@@ -2,7 +2,7 @@ import { RoomInfo } from "../types";
 import '../styles/Room.css';
 import uparrowImage from '../assets/up-arrow.svg';
 import downarrowImage from '../assets/down-arrow.svg';
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Plot from "react-plotly.js";
 
 type ListItemProps = {
@@ -16,6 +16,7 @@ function ListItem(props: ListItemProps) {
 
 export default function Room(props: RoomInfo) {
   const [data, setData] = useState<Array<number>>([])
+  const [targetTemp, setTargetTemp] = useState<number>(props.settings.desiredTemperature);
 
   useEffect(() => {
     setData((data) => [...data, props.state.temperature]);
@@ -29,6 +30,11 @@ export default function Room(props: RoomInfo) {
     }
   }
 
+  const handleInputChange = (event: ChangeEvent) => {
+    console.log(event.target)
+    // setTargetTemp(event.target.value);
+  };
+
   return (
     <div className="Room" style={{ flexDirection: 'row' }}>
       <div className="Room-content" style={{ backgroundColor: resolveBgColor() }}>
@@ -41,6 +47,9 @@ export default function Room(props: RoomInfo) {
             <li>Power consumed: {props.state.powerConsumed.toFixed(2)}</li>
             <li>Current temperature: {props.state.temperature.toFixed(2)}</li>
           </ul>
+        </div>
+        <div>
+          <input type="text" value={targetTemp} onChange={handleInputChange}></input>
         </div>
       </div>
       <div>

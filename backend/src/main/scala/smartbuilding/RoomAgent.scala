@@ -12,6 +12,7 @@ object RoomAgent {
   case class AuctionInitialized(auctioneer: ActorRef[Auctioneer.Command]) extends Command
   case class OfferResult(volume: Double) extends Command
   case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
+  case class SetTargetTemp(temp: Float) extends Command
 
   def apply(
       id: String,
@@ -33,6 +34,8 @@ object RoomAgent {
             work(updateState(state, volume))
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, roomSettings)
+            work(state)
+          case SetTargetTemp(temp) =>
             work(state)
         }
 

@@ -9,6 +9,9 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.core.util.StatusPrinter
+import org.slf4j.{Logger, LoggerFactory}
 import smartbuilding.RoomAgent.GetInfo
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,6 +21,8 @@ import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
 object SimulationManager extends JsonSupport {
+  val logger = LoggerFactory.getLogger("ExpLog")
+
   sealed trait Message
 
   private final case class StartFailed(cause: Throwable) extends Message
@@ -35,6 +40,9 @@ object SimulationManager extends JsonSupport {
       implicit val system: ActorSystem[Nothing] = context.system
       implicit val timeout: Timeout = Timeout(3 seconds)
       implicit val scheduler: Scheduler = context.system.scheduler
+
+      val logContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+      StatusPrinter.print(logContext)
 
       val roomAgents = settings.roomSettings.map { case (id, roomSettings) =>
         (id, context.spawn(RoomAgent(id, settings.buildingSettings, roomSettings), id))
@@ -73,6 +81,9 @@ object SimulationManager extends JsonSupport {
                         Math.pow((actual - desired) - (avgActual - avgDesired), 2)
                       }
                       .foldLeft(0.0)(_ + _) / n
+
+                  logger.info(s"logging-test,logging-test-2")
+
                   complete(Math.sqrt(variance).toString)
               }
             }

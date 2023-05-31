@@ -22,5 +22,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "ch.qos.logback" % "logback-classic" % "1.2.12",
   "ch.megard" %% "akka-http-cors" % "1.2.0"
 )
+
+javaOptions += "-Dlogback.configurationFile=logback.xml"

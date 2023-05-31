@@ -24,10 +24,12 @@ export default function ScorePlot(props: ScorePlotProps) {
       }
     })
       .then(response => {
-        setPlotData({
-          times: plotData.times.concat(new Date().getTime()),
-          stds: plotData.stds.concat(response.data),
-        });
+        setPlotData((oldPlotData) => {
+          return {
+            times: oldPlotData.times.concat(new Date().getTime()),
+            stds: oldPlotData.stds.concat(response.data),
+          }
+        })
       })
       .catch(e => console.log(e))
   }

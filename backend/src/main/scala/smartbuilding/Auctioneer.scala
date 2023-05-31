@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
 import akka.util.Timeout
+import org.slf4j.LoggerFactory
 import smartbuilding.RoomAgent.OfferResult
 import smartbuilding.SmartBuildingApp.actorSystem.executionContext
 
@@ -16,6 +17,8 @@ import scala.util.{Success, Try}
 object Auctioneer {
   sealed trait Command
   case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int) extends Command
+
+  val logger = LoggerFactory.getLogger("ExpLog")
 
   def apply(
       epochDuration: Long,

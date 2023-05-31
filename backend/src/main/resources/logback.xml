@@ -2,7 +2,7 @@
   <appender name="FileAppender" class="ch.qos.logback.core.FileAppender">
     <queueSize>12</queueSize>
     <neverBlock>true</neverBlock>
-    <file>logs/logs.txt</file>
+    <file>../experiments/data/log.txt</file>
     <encoder>
       <pattern>%msg%n</pattern>
     </encoder>

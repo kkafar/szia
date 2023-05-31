@@ -42,7 +42,7 @@ function App() {
   useEffect(() => {
     const intervalHandle = setInterval(() => {
       getData();
-    }, 2000);
+    }, config.requestInterval);
 
     return () => {
       clearInterval(intervalHandle);

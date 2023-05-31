@@ -5,20 +5,25 @@ import akka.actor.typed.{ActorRef, Behavior}
 import smartbuilding.SimulationManager.RoomResponse
 
 object RoomAgent {
+
   import Auctioneer.AuctionOffer
   import RoomState._
 
   sealed trait Command
+
   case class AuctionInitialized(auctioneer: ActorRef[Auctioneer.Command]) extends Command
+
   case class OfferResult(volume: Double) extends Command
+
   case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
+
   case class SetTargetTemp(temp: Float) extends Command
 
   def apply(
              id: String,
              buildingSettings: BuildingSettings,
              initialRoomSettings: RoomSettings
-  ): Behavior[Command] =
+           ): Behavior[Command] =
     Behaviors.setup { context =>
       val capacity = buildingSettings.thermalCapacity
       val resistance = buildingSettings.thermalResistance
@@ -77,10 +82,10 @@ object RoomAgent {
 }
 
 case class RoomState(
-    powerAvailable: Double,
-    powerConsumed: Double,
-    temperature: Double
-)
+                      powerAvailable: Double,
+                      powerConsumed: Double,
+                      temperature: Double
+                    )
 
 object RoomState {
   val MaxControllerOutput = 3

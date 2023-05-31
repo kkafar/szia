@@ -3,11 +3,11 @@ package smartbuilding
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior, PostStop, Scheduler}
-import akka.http.impl.util.JavaMapping.HttpResponse
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.qos.logback.classic.LoggerContext
@@ -39,6 +39,9 @@ object SimulationManager extends JsonSupport {
 
   case class RoomResponse(name: String, state: RoomState, settings: RoomSettings) extends Response
 
+  sealed trait Request
+  case class SetDesiredTempRequest(desiredTemperature: Float) extends Request
+
   def apply(settings: SimulationSettings): Behavior[Message] =
     Behaviors.setup { context =>
       implicit val system: ActorSystem[Nothing] = context.system
@@ -57,11 +60,17 @@ object SimulationManager extends JsonSupport {
       val routes = cors() {
         pathPrefix("room" / Remaining) { id =>
           put {
-            roomAgents.get(id) match {
-              case Some(agent) =>
-                agent.tell(SetTargetTemp(40))
-                complete(StatusCodes.OK)
-              case None => complete(StatusCodes.NotFound)
+            entity(as[String]) { json =>
+              onComplete(Unmarshal(json).to[SetDesiredTempRequest]) {
+                case Failure(exception) => failWith(exception)
+                case Success(request @ SetDesiredTempRequest(desiredTemperature)) =>
+                  roomAgents.get(id) match {
+                    case Some(agent) =>
+                      agent.tell(SetTargetTemp(desiredTemperature))
+                      complete(StatusCodes.OK)
+                    case None => complete(StatusCodes.NotFound)
+                  }
+              }
             }
           }
         } ~
@@ -76,7 +85,7 @@ object SimulationManager extends JsonSupport {
                 }
               case None => complete(StatusCodes.NotFound)
             }
-          } ~
+          }
         } ~
         path("metric") {
           get {

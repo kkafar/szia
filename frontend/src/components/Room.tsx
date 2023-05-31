@@ -2,8 +2,10 @@ import { RoomInfo } from "../types";
 import '../styles/Room.css';
 import uparrowImage from '../assets/up-arrow.svg';
 import downarrowImage from '../assets/down-arrow.svg';
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Plot from "react-plotly.js";
+import config from '../config.json';
+import axios from "axios";
 
 type ListItemProps = {
   title: string,
@@ -17,6 +19,7 @@ function ListItem(props: ListItemProps) {
 export default function Room(props: RoomInfo) {
   const [data, setData] = useState<Array<number>>([])
   const [targetTemp, setTargetTemp] = useState<number>(props.settings.desiredTemperature);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setData((data) => [...data, props.state.temperature]);
@@ -30,9 +33,25 @@ export default function Room(props: RoomInfo) {
     }
   }
 
-  const handleInputChange = (event: ChangeEvent) => {
-    console.log(event.target)
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value)
     // setTargetTemp(event.target.value);
+  };
+
+  const handleTempChange = async () => {
+    const temperature = parseFloat(inputRef.current?.value!);
+    setTargetTemp(temperature);
+    axios({
+      method: 'put',
+      baseURL: config.backendEndpointUrl,
+      url: '/room/' + props.name,
+      data: {
+        desiredTemperature: temperature,
+      },
+      headers: {
+        'Access-Control-Allow-Origin': 'localhost:8080',
+      }
+    })
   };
 
   return (
@@ -49,7 +68,8 @@ export default function Room(props: RoomInfo) {
           </ul>
         </div>
         <div>
-          <input type="text" value={targetTemp} onChange={handleInputChange}></input>
+          <input type="text" ref={inputRef} onChange={handleInputChange}></input>
+          <button onClick={handleTempChange}>Confirm</button>
         </div>
       </div>
       <div>

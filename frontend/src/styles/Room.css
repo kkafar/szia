@@ -9,7 +9,9 @@
   background-color: red;
   font-size: calc(10px + 2vmin);
   border-radius: 10px;
-  width: 30%;
+  padding-right: 20px;
+  margin-right: 20px;
+  /* width: 30%; */
 }
 
 .Room-filler {
@@ -18,4 +20,8 @@
 
 .Room-list {
   padding-left: 12px;
+}
+
+.Room-plot {
+  border-radius: 10px;
 }

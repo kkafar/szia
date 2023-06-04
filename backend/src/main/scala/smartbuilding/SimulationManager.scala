@@ -12,7 +12,7 @@ import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.util.StatusPrinter
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.LoggerFactory
 import smartbuilding.RoomAgent.{GetInfo, SetTargetTemp}
 
 import scala.concurrent.ExecutionContext.Implicits.global

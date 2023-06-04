@@ -24,8 +24,8 @@ import scala.util.{Failure, Success}
 object SimulationManager extends JsonSupport {
   // TODO: Fix this, try logging in auctioneer or implement additional logging actor that calculates metric periodically
   // once a time tick.
-  val logger = LoggerFactory.getLogger("ExpLog")
-  var time_tick = 0
+  private val logger = LoggerFactory.getLogger("ExpLog")
+  private var time_tick = 0
 
   sealed trait Message
 

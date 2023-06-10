@@ -22,11 +22,6 @@ import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
 object SimulationManager extends JsonSupport {
-  // TODO: Fix this, try logging in auctioneer or implement additional logging actor that calculates metric periodically
-  // once a time tick.
-  private val logger = LoggerFactory.getLogger("ExpLog")
-  private var time_tick = 0
-
   sealed trait Message
 
   private final case class StartFailed(cause: Throwable) extends Message
@@ -106,10 +101,6 @@ object SimulationManager extends JsonSupport {
                         Math.pow((actual - desired) - (avgActual - avgDesired), 2)
                       }
                       .foldLeft(0.0)(_ + _) / n
-
-                  time_tick += 1
-                  logger.info(s"$time_tick,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${Math.sqrt(variance)}")
-
                   complete(Math.sqrt(variance).toString)
               }
             }

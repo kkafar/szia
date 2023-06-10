@@ -49,7 +49,7 @@ object RoomAgent {
         val sell = !shouldHeat(state, settings)
         val volume = 3 * (diff / 20.0)
         val price = if (sell) 10 else 10 // 7.2 - deleting the temperature dependency
-        AuctionOffer(id, sell, volume, price)
+        AuctionOffer(id, sell, volume, price, RoomResponse(id, state, settings))
       }
 
       def updateState(state: RoomState, settings: RoomSettings, volume: Double) = {

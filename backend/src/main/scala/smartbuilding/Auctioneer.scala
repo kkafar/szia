@@ -6,6 +6,7 @@ import akka.actor.typed.{ActorRef, Behavior, Scheduler}
 import akka.util.Timeout
 import org.slf4j.LoggerFactory
 import smartbuilding.RoomAgent.OfferResult
+import smartbuilding.SimulationManager.RoomResponse
 import smartbuilding.SmartBuildingApp.actorSystem.executionContext
 
 import java.time.Instant
@@ -16,14 +17,17 @@ import scala.util.{Success, Try}
 
 object Auctioneer {
   sealed trait Command
-  case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int) extends Command
+
+  case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int, meta: SimulationManager.RoomResponse) extends Command
 
   val logger = LoggerFactory.getLogger("ExpLog")
+  var timeTick = 0
 
   def apply(
-      epochDuration: Long,
-      roomAgents: List[ActorRef[RoomAgent.Command]]
-  ): Behavior[Command] = Behaviors.setup { context =>
+             epochDuration: Long,
+             roomAgents: List[ActorRef[RoomAgent.Command]],
+             settings: SimulationSettings,
+           ): Behavior[Command] = Behaviors.setup { context =>
     implicit val timeout: Timeout = Timeout(epochDuration, SECONDS)
     implicit val scheduler: Scheduler = context.system.scheduler
 
@@ -48,11 +52,32 @@ object Auctioneer {
           val now = Instant.now()
           if (now.isBefore(deadline)) Thread.sleep(deadline.toEpochMilli - now.toEpochMilli)
           context.log.info(s"Finished auction $auctionNumber with clearing price $price.")
+
+          val metric = calculateMetric(responses.map(_.meta))
+          timeTick += 1
+          logger.info(s"$timeTick,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${metric}")
+
           work(auctionNumber + 1)
         case _ =>
           context.log.error("Unable to finish the auction")
           work(auctionNumber + 1)
       }
+    }
+
+    def calculateMetric(responses: Iterable[RoomResponse]) = {
+      val n = responses.size
+      val desiredTemperatures = responses.map(_.settings.desiredTemperature)
+      val actualTemperatures = responses.map(_.state.temperature)
+      val avgDesired = desiredTemperatures.foldLeft(0.0)(_ + _) / n
+      val avgActual = actualTemperatures.foldLeft(0.0)(_ + _) / n
+      val variance =
+        desiredTemperatures
+          .zip(actualTemperatures)
+          .map { case (actual, desired) =>
+            Math.pow((actual - desired) - (avgActual - avgDesired), 2)
+          }
+          .foldLeft(0.0)(_ + _) / n
+      Math.sqrt(variance)
     }
 
     def findClearingPrice(offers: List[AuctionOffer]): Int = {

@@ -40,6 +40,7 @@ object SimulationManager extends JsonSupport {
   case class RoomResponse(name: String, state: RoomState, settings: RoomSettings) extends Response
 
   sealed trait Request
+
   case class SetDesiredTempRequest(desiredTemperature: Float) extends Request
 
   def apply(settings: SimulationSettings): Behavior[Message] =
@@ -55,7 +56,7 @@ object SimulationManager extends JsonSupport {
         (id, context.spawn(RoomAgent(id, settings.buildingSettings, roomSettings), id))
       }
       val auctioneer =
-        context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList), "auctioneer")
+        context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList, settings), "auctioneer")
 
       val routes = cors() {
         pathPrefix("room" / Remaining) { id =>
@@ -63,7 +64,7 @@ object SimulationManager extends JsonSupport {
             entity(as[String]) { json =>
               onComplete(Unmarshal(json).to[SetDesiredTempRequest]) {
                 case Failure(exception) => failWith(exception)
-                case Success(request @ SetDesiredTempRequest(desiredTemperature)) =>
+                case Success(request@SetDesiredTempRequest(desiredTemperature)) =>
                   roomAgents.get(id) match {
                     case Some(agent) =>
                       agent.tell(SetTargetTemp(desiredTemperature))
@@ -74,45 +75,45 @@ object SimulationManager extends JsonSupport {
             }
           }
         } ~
-        pathPrefix("room" / Remaining) { id =>
-          get {
-            roomAgents.get(id) match {
-              case Some(agent) =>
-                onComplete(agent.ask(GetInfo)) {
-                  case Failure(exception) => failWith(exception)
-                  case Success(response@RoomResponse(name, state, settings)) =>
-                    complete(response)
-                }
-              case None => complete(StatusCodes.NotFound)
+          pathPrefix("room" / Remaining) { id =>
+            get {
+              roomAgents.get(id) match {
+                case Some(agent) =>
+                  onComplete(agent.ask(GetInfo)) {
+                    case Failure(exception) => failWith(exception)
+                    case Success(response@RoomResponse(name, state, settings)) =>
+                      complete(response)
+                  }
+                case None => complete(StatusCodes.NotFound)
+              }
+            }
+          } ~
+          path("metric") {
+            get {
+              val roomInfos = roomAgents.values.map(_.ask(GetInfo))
+              onComplete(Future.sequence(roomInfos)) {
+                case Failure(exception) => failWith(exception)
+                case Success(responses: Iterable[RoomResponse]) =>
+                  val n = responses.size
+                  val desiredTemperatures = responses.map(_.settings.desiredTemperature)
+                  val actualTemperatures = responses.map(_.state.temperature)
+                  val avgDesired = desiredTemperatures.foldLeft(0.0)(_ + _) / n
+                  val avgActual = actualTemperatures.foldLeft(0.0)(_ + _) / n
+                  val variance =
+                    desiredTemperatures
+                      .zip(actualTemperatures)
+                      .map { case (actual, desired) =>
+                        Math.pow((actual - desired) - (avgActual - avgDesired), 2)
+                      }
+                      .foldLeft(0.0)(_ + _) / n
+
+                  time_tick += 1
+                  logger.info(s"$time_tick,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${Math.sqrt(variance)}")
+
+                  complete(Math.sqrt(variance).toString)
+              }
             }
           }
-        } ~
-        path("metric") {
-          get {
-            val roomInfos = roomAgents.values.map(_.ask(GetInfo))
-            onComplete(Future.sequence(roomInfos)) {
-              case Failure(exception) => failWith(exception)
-              case Success(responses: Iterable[RoomResponse]) =>
-                val n = responses.size
-                val desiredTemperatures = responses.map(_.settings.desiredTemperature)
-                val actualTemperatures = responses.map(_.state.temperature)
-                val avgDesired = desiredTemperatures.foldLeft(0.0)(_ + _) / n
-                val avgActual = actualTemperatures.foldLeft(0.0)(_ + _) / n
-                val variance =
-                  desiredTemperatures
-                    .zip(actualTemperatures)
-                    .map { case (actual, desired) =>
-                      Math.pow((actual - desired) - (avgActual - avgDesired), 2)
-                    }
-                    .foldLeft(0.0)(_ + _) / n
-
-                time_tick += 1
-                logger.info(s"$time_tick,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${Math.sqrt(variance)}")
-
-                complete(Math.sqrt(variance).toString)
-            }
-          }
-        }
       }
 
       val serverBinding: Future[Http.ServerBinding] =

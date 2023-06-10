@@ -1,33 +1,35 @@
 <configuration>
-  <appender name="FileAppender" class="ch.qos.logback.core.FileAppender">
-    <queueSize>12</queueSize>
-    <neverBlock>true</neverBlock>
-    <file>../experiments/data/log.txt</file>
-    <encoder>
-      <pattern>%msg%n</pattern>
-    </encoder>
-  </appender>
+    <timestamp key="bySecond" datePattern="yy-MM-dd-HH-mm-ss" />
+    <appender name="FileAppender" class="ch.qos.logback.core.FileAppender">
+        <queueSize>12</queueSize>
+        <neverBlock>true</neverBlock>
+        <file>../experiments/data/log-${bySecond}.txt</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+        <append>false</append>
+    </appender>
 
 
-  <!-- This is a development logging configuration that logs to standard out, for an example of a production
-    logging config, see the Akka docs: https://doc.akka.io/docs/akka/2.6/typed/logging.html#logback -->
-  <appender name="STDOUT" target="System.out" class="ch.qos.logback.core.ConsoleAppender">
-      <encoder>
-          <pattern>[%date{ISO8601}] [%level] [%logger] [%thread] [%X{akkaSource}] - %msg%n</pattern>
-      </encoder>
-  </appender>
+    <!-- This is a development logging configuration that logs to standard out, for an example of a production
+      logging config, see the Akka docs: https://doc.akka.io/docs/akka/2.6/typed/logging.html#logback -->
+    <appender name="STDOUT" target="System.out" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%date{ISO8601}] [%level] [%logger] [%thread] [%X{akkaSource}] - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-      <queueSize>1024</queueSize>
-      <neverBlock>true</neverBlock>
-      <appender-ref ref="STDOUT" />
-  </appender>
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="STDOUT"/>
+    </appender>
 
-  <root level="INFO">
-      <appender-ref ref="ASYNC"/>
-  </root>
+    <root level="INFO">
+        <appender-ref ref="ASYNC"/>
+    </root>
 
-  <logger name="ExpLog" level="INFO">
-    <appender-ref ref="FileAppender" />
-  </logger>
+    <logger name="ExpLog" level="INFO">
+        <appender-ref ref="FileAppender"/>
+    </logger>
 </configuration>

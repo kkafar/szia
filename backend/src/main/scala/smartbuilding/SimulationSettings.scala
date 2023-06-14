@@ -6,7 +6,7 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 case class BuildingSettings(thermalCapacity: Double, thermalResistance: Double)
 
-case class RoomSettings(defaultTemperature: Double, desiredTemperature: Double)
+case class RoomSettings(initialEnergy: Double, defaultTemperature: Double, desiredTemperature: Double)
 
 case class ServerSettings(host: String, port: Int)
 
@@ -34,8 +34,9 @@ object SimulationSettings {
     val roomsList = config.getConfigList("rooms")
     val roomSettings = roomsList.asScala.map { c =>
       c.getString("id") -> RoomSettings(
+        c.getDouble("initialEnergy"),
         c.getDouble("defaultTemperature"),
-        c.getDouble("desiredTemperature")
+        c.getDouble("desiredTemperature"),
       )
     }.toMap
 

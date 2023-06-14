@@ -20,8 +20,7 @@ object Auctioneer {
 
   case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int, meta: SimulationManager.RoomResponse) extends Command
 
-  val logger = LoggerFactory.getLogger("ExpLog")
-  var timeTick = 0
+  private val logger = LoggerFactory.getLogger("ExpLog")
 
   def apply(
              epochDuration: Long,
@@ -44,9 +43,9 @@ object Auctioneer {
           val price = findClearingPrice(responses)
 
           roomAgents.zip(responses).foreach { case (agent, offer) =>
-            if (offer.sell && offer.price <= price) agent ! OfferResult(-offer.volume)
-            else if (!offer.sell && offer.price >= price) agent ! OfferResult(offer.volume)
-            else agent ! OfferResult(0.0)
+            if (offer.sell && offer.price <= price) agent ! OfferResult(auctionNumber, -offer.volume)
+            else if (!offer.sell && offer.price >= price) agent ! OfferResult(auctionNumber, offer.volume)
+            else agent ! OfferResult(auctionNumber, 0.0)
           }
 
           val now = Instant.now()
@@ -54,8 +53,7 @@ object Auctioneer {
           context.log.info(s"Finished auction $auctionNumber with clearing price $price.")
 
           val metric = calculateMetric(responses.map(_.meta))
-          timeTick += 1
-          logger.info(s"$timeTick,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${metric}")
+          logger.info(s"$auctionNumber,${settings.buildingSettings.thermalCapacity},${settings.buildingSettings.thermalResistance},${metric}")
 
           work(auctionNumber + 1)
         case _ =>

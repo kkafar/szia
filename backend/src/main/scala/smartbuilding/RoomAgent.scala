@@ -2,6 +2,7 @@ package smartbuilding
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
+import org.slf4j.LoggerFactory
 import smartbuilding.SimulationManager.RoomResponse
 
 object RoomAgent {
@@ -13,11 +14,13 @@ object RoomAgent {
 
   case class AuctionInitialized(auctioneer: ActorRef[Auctioneer.Command]) extends Command
 
-  case class OfferResult(volume: Double) extends Command
+  case class OfferResult(auctionId: Int, volume: Double) extends Command
 
   case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
 
   case class SetTargetTemp(temp: Float) extends Command
+
+  val logger = LoggerFactory.getLogger("RoomAgentExpLog")
 
   def apply(
              id: String,
@@ -35,13 +38,13 @@ object RoomAgent {
             context.log.info(s"Agent $id sending $offer")
             auctioneer ! offer
             work(state, settings)
-          case OfferResult(volume) =>
-            work(updateState(state, settings, volume), settings)
+          case OfferResult(auctionId, volume) =>
+            work(updateState(state, settings, volume, auctionId), settings)
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
           case SetTargetTemp(temp) =>
-            work(state, RoomSettings(settings.defaultTemperature, temp))
+            work(state, RoomSettings(settings.initialEnergy, settings.defaultTemperature, temp))
         }
 
       def makeOffer(state: RoomState, settings: RoomSettings) = {
@@ -52,11 +55,12 @@ object RoomAgent {
         AuctionOffer(id, sell, volume, price, RoomResponse(id, state, settings))
       }
 
-      def updateState(state: RoomState, settings: RoomSettings, volume: Double) = {
+      def updateState(state: RoomState, settings: RoomSettings, volume: Double, auctionId: Int) = {
         val powerAvailable = state.powerAvailable + volume
         val output = updateControllerOutput(state, settings)
         val powerConsumed = Math.min(output, powerAvailable)
         val temperature = updateTemperature(state, settings, -powerConsumed)
+        logger.info(s"$auctionId,$id,${settings.initialEnergy},${settings.defaultTemperature},${settings.desiredTemperature},$powerAvailable,$powerConsumed,$temperature")
         context.log.info(s"Agent $id was offered $volume of heat, pa: $powerAvailable, output: $output, pc: $powerConsumed")
         RoomState(powerAvailable, powerConsumed, temperature)
       }
@@ -77,7 +81,7 @@ object RoomAgent {
 
       def shouldHeat(state: RoomState, settings: RoomSettings) = state.temperature < settings.desiredTemperature
 
-      work(RoomState(3, 0, initialRoomSettings.defaultTemperature), initialRoomSettings)
+      work(RoomState(initialRoomSettings.initialEnergy, 0, initialRoomSettings.defaultTemperature), initialRoomSettings)
     }
 }
 

@@ -20,8 +20,8 @@ object Auctioneer {
 
   case class AuctionOffer(id: String, sell: Boolean, volume: Double, price: Int, meta: SimulationManager.RoomResponse) extends Command
 
-  val logger = LoggerFactory.getLogger("ExpLog")
-  var timeTick = 0
+  private val logger = LoggerFactory.getLogger("ExpLog")
+  private var timeTick = 0
 
   def apply(
              epochDuration: Long,

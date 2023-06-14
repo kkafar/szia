@@ -9,6 +9,15 @@
         </encoder>
         <append>false</append>
     </appender>
+    <appender name="RoomAgentFileAppender" class="ch.qos.logback.core.FileAppender">
+        <queueSize>12</queueSize>
+        <neverBlock>true</neverBlock>
+        <file>../experiments/data/agent-log-${bySecond}.txt</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+        <append>false</append>
+    </appender>
 
 
     <!-- This is a development logging configuration that logs to standard out, for an example of a production
@@ -31,5 +40,8 @@
 
     <logger name="ExpLog" level="INFO">
         <appender-ref ref="FileAppender"/>
+    </logger>
+    <logger name="RoomAgentExpLog" level="INFO">
+        <appender-ref ref="RoomAgentFileAppender" />
     </logger>
 </configuration>

@@ -77,7 +77,7 @@ object RoomAgent {
 
       def shouldHeat(state: RoomState, settings: RoomSettings) = state.temperature < settings.desiredTemperature
 
-      work(RoomState(3, 0, initialRoomSettings.defaultTemperature), initialRoomSettings)
+      work(RoomState(initialRoomSettings.initialEnergy, 0, initialRoomSettings.defaultTemperature), initialRoomSettings)
     }
 }
 

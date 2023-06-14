@@ -1,4 +1,5 @@
 export type RoomSettings = {
+  initialEnergy: number,
   defaultTemperature: number,
   desiredTemperature: number,
 }

@@ -44,11 +44,13 @@ print(f"Discovered agent ids: {agent_ids}")
 fig, plot = plt.subplots(nrows=1, ncols=1)
 plot_metric(fig, plot, raw_general_df)
 fig.tight_layout()
+fig.savefig(plot_dir.joinpath(f'exp_{experiment_id}_metric.png'))
 
 for agent_id in agent_ids:
     fig, plot = plt.subplots(nrows=2, ncols=2)
     plot_room(fig, plot[0][0], plot[0][1], plot[1][0], plot[1][1], raw_agent_df, agent_id)
     fig.tight_layout()
+    fig.savefig(plot_dir.joinpath(f'exp_{experiment_id}_agent_{agent_id}_room.png'))
 
 
 plt.show()

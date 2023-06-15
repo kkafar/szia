@@ -8,7 +8,7 @@ export type SimulationSettings = {
 }
 
 export type RoomSettings = {
-  name: string,
+  id: string,
   initialEnergy: number,
   defaultTemperature: number,
   desiredTemperature: number,

@@ -22,7 +22,7 @@ function Dashboard(props: DashboardProps) {
           return axios({
             method: 'get',
             baseURL: config.backendEndpointUrl,
-            url: '/room/' + settings.name,
+            url: '/room/' + settings.id,
             headers: {
               'Access-Control-Allow-Origin': 'localhost:8080',
             }
@@ -38,7 +38,7 @@ function Dashboard(props: DashboardProps) {
   useEffect(() => {
     const intervalHandle = setInterval(() => {
       getData();
-    }, props.simulationSettings.epochDuration);
+    }, config.requestInterval);
 
     return () => {
       clearInterval(intervalHandle);

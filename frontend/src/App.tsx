@@ -8,6 +8,8 @@ import { SimulationService } from './services/SimulationService';
 
 
 function App() {
+  const [initialDataFetched, setInitialDataFetched] = useState(false);
+
   const [simSettings, setSimSettings] = useState<SimulationSettings>({
     epochDuration: 1,
     buildingSettings: {
@@ -19,16 +21,26 @@ function App() {
 
 
   useEffect(() => {
-    new SimulationService().getInitialConfiguration()
-      .then((response: SimulationSettings) => {
-        setSimSettings(response);
-      })
-      .catch(console.warn)
-  }, []);
+    if (!initialDataFetched) {
+      new SimulationService().getInitialConfiguration()
+        .then((response: SimulationSettings) => {
+          console.log(JSON.stringify(response));
+          setSimSettings(response);
+          setInitialDataFetched(true);
+        })
+        .catch(console.error)
+    }
+  });
+  
+  if (initialDataFetched === true) {
+    console.warn("MOUNTING Dashboard COMPONENT UNDER APP");
+    return (
+      <Dashboard simulationSettings={simSettings} />
+    );
+  } else {
+    return (<div>Loading...</div>);
+  }
 
-  return (
-    <Dashboard simulationSettings={simSettings} />
-  );
 }
 
 export default App;

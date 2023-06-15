@@ -1,4 +1,14 @@
+export type SimulationSettings = {
+  epochDuration: number,
+  buildingSettings: {
+    thermalCapacity: number,
+    thermalResistance: number,
+  },
+  roomSettings: Array<RoomSettings>
+}
+
 export type RoomSettings = {
+  name: string,
   initialEnergy: number,
   defaultTemperature: number,
   desiredTemperature: number,

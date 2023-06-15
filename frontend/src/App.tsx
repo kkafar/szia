@@ -2,57 +2,32 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 
-import { RoomInfo } from './types';
-import axios from 'axios';
-import RoomList from './components/RoomList';
-import config from './config.json';
-import ScorePlot from './components/ScorePlot';
+import { SimulationSettings } from './types';
+import Dashboard from './components/Dashboard';
+import { SimulationService } from './services/SimulationService';
 
 
 function App() {
-  const roomIds: Array<string> = ["alfa", "beta", "gamma"];
-  const [roomList, setRoomList] = useState<Array<RoomInfo>>([]);
+  const [simSettings, setSimSettings] = useState<SimulationSettings>({
+    epochDuration: 1,
+    buildingSettings: {
+      thermalCapacity: 10.0,
+      thermalResistance: 10.0,
+    },
+    roomSettings: [],
+  });
 
-  function updateState(data: Array<RoomInfo>) {
-    setRoomList(data);
-  }
-
-  const getData = async () => {
-    try {
-      const result = await axios.all(
-        roomIds.map((id) => {
-          return axios({
-            method: 'get',
-            baseURL: config.backendEndpointUrl,
-            url: '/room/' + id,
-            headers: {
-              'Access-Control-Allow-Origin': 'localhost:8080',
-            }
-          })
-        })
-      )
-
-      updateState(result.map((response) => response.data))
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
   useEffect(() => {
-    const intervalHandle = setInterval(() => {
-      getData();
-    }, config.requestInterval);
-
-    return () => {
-      clearInterval(intervalHandle);
-    };
+    new SimulationService().getInitialConfiguration()
+      .then((response: SimulationSettings) => {
+        setSimSettings(response);
+      })
+      .catch(console.warn)
   }, []);
 
   return (
-    <div className="App">
-      <RoomList rooms={roomList} />
-      <ScorePlot />
-    </div>
+    <Dashboard simulationSettings={simSettings} />
   );
 }
 

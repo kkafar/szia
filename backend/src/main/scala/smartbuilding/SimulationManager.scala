@@ -13,7 +13,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.util.StatusPrinter
 import org.slf4j.LoggerFactory
-import smartbuilding.RoomAgent.{GetInfo, SetTargetTemp}
+import smartbuilding.RoomAgent.{GetInfo, ModifyDesiredTemperature}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -54,6 +54,11 @@ object SimulationManager extends JsonSupport {
         context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList, settings), "auctioneer")
 
       val routes = cors() {
+        pathPrefix("config") {
+          get {
+            complete(StatusCodes.OK)
+          }
+        } ~
         pathPrefix("room" / Remaining) { id =>
           put {
             entity(as[String]) { json =>
@@ -62,7 +67,7 @@ object SimulationManager extends JsonSupport {
                 case Success(request@SetDesiredTempRequest(desiredTemperature)) =>
                   roomAgents.get(id) match {
                     case Some(agent) =>
-                      agent.tell(SetTargetTemp(desiredTemperature))
+                      agent.tell(ModifyDesiredTemperature(desiredTemperature))
                       complete(StatusCodes.OK)
                     case None => complete(StatusCodes.NotFound)
                   }

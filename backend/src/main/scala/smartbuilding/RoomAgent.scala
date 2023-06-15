@@ -18,7 +18,7 @@ object RoomAgent {
 
   case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
 
-  case class SetTargetTemp(temp: Float) extends Command
+  case class ModifyDesiredTemperature(temp: Float) extends Command
 
   val logger = LoggerFactory.getLogger("RoomAgentExpLog")
 
@@ -43,7 +43,7 @@ object RoomAgent {
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
-          case SetTargetTemp(temp) =>
+          case ModifyDesiredTemperature(temp) =>
             work(state, RoomSettings(settings.initialEnergy, settings.defaultTemperature, temp))
         }
 

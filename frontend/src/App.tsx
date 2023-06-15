@@ -33,7 +33,7 @@ function App() {
       });
       return () => clearInterval(intervalHandle);
     }
-  });
+  }, []);
   
   if (initialDataFetched === true) {
     return (

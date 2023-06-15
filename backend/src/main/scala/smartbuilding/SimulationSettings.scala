@@ -6,7 +6,12 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 case class BuildingSettings(thermalCapacity: Double, thermalResistance: Double)
 
-case class RoomSettings(initialEnergy: Double, defaultTemperature: Double, desiredTemperature: Double)
+case class RoomSettings(
+    initialEnergy: Double,
+    defaultTemperature: Double,
+    desiredTemperature: Double,
+    powerAvailableRatio: Double
+)
 
 case class ServerSettings(host: String, port: Int)
 
@@ -37,6 +42,7 @@ object SimulationSettings {
         c.getDouble("initialEnergy"),
         c.getDouble("defaultTemperature"),
         c.getDouble("desiredTemperature"),
+        c.getDouble("powerAvailableRatio")
       )
     }.toMap
 

@@ -22,18 +22,20 @@ function App() {
 
   useEffect(() => {
     if (!initialDataFetched) {
-      new SimulationService().getInitialConfiguration()
-        .then((response: SimulationSettings) => {
-          console.log(JSON.stringify(response));
-          setSimSettings(response);
-          setInitialDataFetched(true);
-        })
-        .catch(console.error)
+      const intervalHandle = setInterval(() => {
+        new SimulationService().getInitialConfiguration()
+          .then((response: SimulationSettings) => {
+            console.log(JSON.stringify(response));
+            setSimSettings(response);
+            setInitialDataFetched(true);
+          })
+          .catch(console.error)
+      });
+      return () => clearInterval(intervalHandle);
     }
   });
   
   if (initialDataFetched === true) {
-    console.warn("MOUNTING Dashboard COMPONENT UNDER APP");
     return (
       <Dashboard simulationSettings={simSettings} />
     );

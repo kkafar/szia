@@ -16,7 +16,7 @@ export class SimulationService {
         }
       });
     } catch (error) {
-      console.error(error)
+      console.warn(error)
       throw new Error("Some error occured while tryincg to fetch data. Maybe backed server is down?"); 
     }
 

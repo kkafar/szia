@@ -43,8 +43,8 @@ object RoomAgent {
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
-          case ModifyDesiredTemperature(temp) =>
-            work(state, RoomSettings(settings.id, settings.initialEnergy, settings.defaultTemperature, temp))
+          case SetTargetTemp(temp) =>
+            work(state, settings.copy(desiredTemperature = temp))
         }
 
       def makeOffer(state: RoomState, settings: RoomSettings) = {
@@ -56,13 +56,18 @@ object RoomAgent {
       }
 
       def updateState(state: RoomState, settings: RoomSettings, volume: Double, auctionId: Int) = {
-        val powerAvailable = state.powerAvailable + volume
+        val powerAvailable = updatePowerAvailable(state, settings, volume)
         val output = updateControllerOutput(state, settings)
-        val powerConsumed = Math.min(output, powerAvailable)
+        val powerConsumed = Math.min(Math.abs(output), powerAvailable)
         val temperature = updateTemperature(state, settings, -powerConsumed)
         logger.info(s"$auctionId,$id,${settings.initialEnergy},${settings.defaultTemperature},${settings.desiredTemperature},$powerAvailable,$powerConsumed,$temperature")
         context.log.info(s"Agent $id was offered $volume of heat, pa: $powerAvailable, output: $output, pc: $powerConsumed")
-        RoomState(powerAvailable, powerConsumed, temperature)
+        RoomState(powerAvailable - powerConsumed, powerConsumed, temperature)
+      }
+
+      def updatePowerAvailable(state: RoomState, settings: RoomSettings,volume: Double): Double = {
+        val totalPowerAvailable = Math.max(0.0, state.powerAvailable + volume)
+        Math.min(totalPowerAvailable, settings.initialEnergy * settings.powerAvailableRatio)
       }
 
       def updateControllerOutput(state: RoomState, settings: RoomSettings) = {

@@ -25,3 +25,8 @@
 .Room-plot {
   border-radius: 10px;
 }
+
+.Room-input-wrapper {
+  display: flex;
+  justify-content: center;
+}

@@ -18,7 +18,7 @@ object RoomAgent {
 
   case class GetInfo(replyTo: ActorRef[SimulationManager.Response]) extends Command
 
-  case class SetTargetTemp(temp: Float) extends Command
+  case class ModifyDesiredTemperature(temp: Float) extends Command
 
   val logger = LoggerFactory.getLogger("RoomAgentExpLog")
 
@@ -43,7 +43,7 @@ object RoomAgent {
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
-          case SetTargetTemp(temp) =>
+          case ModifyDesiredTemperature(temp) =>
             work(state, settings.copy(desiredTemperature = temp))
         }
 
@@ -51,7 +51,7 @@ object RoomAgent {
         val diff = settings.desiredTemperature - state.temperature
         val sell = !shouldHeat(state, settings)
         val volume = 3 * (diff / 20.0)
-        val price = if (sell) 10 else 10 // 7.2 - deleting the temperature dependency
+        val price = if (sell) 10 else 100 // 7.2 - deleting the temperature dependency
         AuctionOffer(id, sell, volume, price, RoomResponse(id, state, settings))
       }
 

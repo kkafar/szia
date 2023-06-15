@@ -7,7 +7,7 @@
 
 .Room-content {
   background-color: red;
-  font-size: calc(10px + 2vmin);
+  font-size: calc(10px + 1vmin);
   border-radius: 10px;
   padding-right: 20px;
   margin-right: 20px;
@@ -24,4 +24,9 @@
 
 .Room-plot {
   border-radius: 10px;
+}
+
+.Room-input-wrapper {
+  display: flex;
+  justify-content: center;
 }

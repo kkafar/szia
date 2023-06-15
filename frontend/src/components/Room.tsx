@@ -67,7 +67,7 @@ export default function Room(props: RoomInfo) {
             <li>Current temperature: {props.state.temperature.toFixed(2)}</li>
           </ul>
         </div>
-        <div>
+        <div className="Room-input-wrapper">
           <input type="text" ref={inputRef} onChange={handleInputChange}></input>
           <button onClick={handleTempChange}>Confirm</button>
         </div>

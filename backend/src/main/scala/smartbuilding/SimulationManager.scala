@@ -13,13 +13,13 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.util.StatusPrinter
 import org.slf4j.LoggerFactory
-import smartbuilding.RoomAgent.{GetInfo, SetTargetTemp}
+import smartbuilding.RoomAgent.{GetInfo, ModifyDesiredTemperature}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.{Duration, DurationInt, SECONDS}
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object SimulationManager extends JsonSupport {
   sealed trait Message
@@ -34,9 +34,14 @@ object SimulationManager extends JsonSupport {
 
   case class RoomResponse(name: String, state: RoomState, settings: RoomSettings) extends Response
 
-  sealed trait Request
+  sealed trait ApiRequest
 
-  case class SetDesiredTempRequest(desiredTemperature: Float) extends Request
+  case class ModifyDesiredTemperatureRequest(desiredTemperature: Float) extends ApiRequest
+
+  sealed trait ApiResponse
+
+  case class ConfigResponse(epochDuration: Long, buildingSettings: BuildingSettings, roomSettings: Iterable[RoomSettings]) extends ApiResponse
+  case class AllRoomsResponse(roomSettings: Iterable[RoomResponse])
 
   def apply(settings: SimulationSettings): Behavior[Message] =
     Behaviors.setup { context =>
@@ -54,22 +59,38 @@ object SimulationManager extends JsonSupport {
         context.spawn(Auctioneer(settings.epochDuration, roomAgents.values.toList, settings), "auctioneer")
 
       val routes = cors() {
-        pathPrefix("room" / Remaining) { id =>
-          put {
-            entity(as[String]) { json =>
-              onComplete(Unmarshal(json).to[SetDesiredTempRequest]) {
-                case Failure(exception) => failWith(exception)
-                case Success(request@SetDesiredTempRequest(desiredTemperature)) =>
-                  roomAgents.get(id) match {
-                    case Some(agent) =>
-                      agent.tell(SetTargetTemp(desiredTemperature))
-                      complete(StatusCodes.OK)
-                    case None => complete(StatusCodes.NotFound)
-                  }
-              }
-            }
+        pathPrefix("config") {
+          get {
+            complete(ConfigResponse(settings.epochDuration, settings.buildingSettings, settings.roomSettings.map {
+              case (id, settings) => settings
+            }))
           }
         } ~
+          pathPrefix("rooms") {
+            get {
+              val futureResponses = roomAgents.map { case (id, agent) => agent.ask(GetInfo) }
+              Try(Await.result(Future.sequence(futureResponses), Duration(settings.epochDuration, SECONDS))) match {
+                case Success(responses: List[RoomResponse]) => complete(AllRoomsResponse(responses))
+                case Failure(exception) => failWith(exception)
+              }
+            }
+          } ~
+          pathPrefix("room" / Remaining) { id =>
+            put {
+              entity(as[String]) { json =>
+                onComplete(Unmarshal(json).to[ModifyDesiredTemperatureRequest]) {
+                  case Failure(exception) => failWith(exception)
+                  case Success(request@ModifyDesiredTemperatureRequest(desiredTemperature)) =>
+                    roomAgents.get(id) match {
+                      case Some(agent) =>
+                        agent.tell(ModifyDesiredTemperature(desiredTemperature))
+                        complete(StatusCodes.OK)
+                      case None => complete(StatusCodes.NotFound)
+                    }
+                }
+              }
+            }
+          } ~
           pathPrefix("room" / Remaining) { id =>
             get {
               roomAgents.get(id) match {

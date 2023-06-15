@@ -1,58 +1,48 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
 import './App.css';
 
-import { RoomInfo } from './types';
-import axios from 'axios';
-import RoomList from './components/RoomList';
-import config from './config.json';
-import ScorePlot from './components/ScorePlot';
+import { SimulationSettings } from './types';
+import Dashboard from './components/Dashboard';
+import { SimulationService } from './services/SimulationService';
 
 
 function App() {
-  const roomIds: Array<string> = ["alfa", "beta", "gamma"];
-  const [roomList, setRoomList] = useState<Array<RoomInfo>>([]);
+  const [initialDataFetched, setInitialDataFetched] = useState(false);
 
-  function updateState(data: Array<RoomInfo>) {
-    setRoomList(data);
-  }
+  const [simSettings, setSimSettings] = useState<SimulationSettings>({
+    epochDuration: 1,
+    buildingSettings: {
+      thermalCapacity: 10.0,
+      thermalResistance: 10.0,
+    },
+    roomSettings: [],
+  });
 
-  const getData = async () => {
-    try {
-      const result = await axios.all(
-        roomIds.map((id) => {
-          return axios({
-            method: 'get',
-            baseURL: config.backendEndpointUrl,
-            url: '/room/' + id,
-            headers: {
-              'Access-Control-Allow-Origin': 'localhost:8080',
-            }
-          })
-        })
-      )
-
-      updateState(result.map((response) => response.data))
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
   useEffect(() => {
-    const intervalHandle = setInterval(() => {
-      getData();
-    }, config.requestInterval);
-
-    return () => {
-      clearInterval(intervalHandle);
-    };
+    if (!initialDataFetched) {
+      const intervalHandle = setInterval(() => {
+        new SimulationService().getInitialConfiguration()
+          .then((response: SimulationSettings) => {
+            console.log(JSON.stringify(response));
+            setSimSettings(response);
+            setInitialDataFetched(true);
+          })
+          .catch(console.error)
+      });
+      return () => clearInterval(intervalHandle);
+    }
   }, []);
+  
+  if (initialDataFetched === true) {
+    return (
+      <Dashboard simulationSettings={simSettings} />
+    );
+  } else {
+    return (<div>Loading...</div>);
+  }
 
-  return (
-    <div className="App">
-      <RoomList rooms={roomList} />
-      <ScorePlot />
-    </div>
-  );
 }
 
 export default App;

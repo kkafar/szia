@@ -43,7 +43,7 @@ object RoomAgent {
           case GetInfo(replyTo) =>
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
-          case SetTargetTemp(temp) =>
+          case ModifyDesiredTemperature(temp) =>
             work(state, settings.copy(desiredTemperature = temp))
         }
 

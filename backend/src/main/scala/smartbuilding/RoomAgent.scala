@@ -44,7 +44,7 @@ object RoomAgent {
             replyTo ! RoomResponse(id, state, settings)
             work(state, settings)
           case ModifyDesiredTemperature(temp) =>
-            work(state, RoomSettings(settings.initialEnergy, settings.defaultTemperature, temp))
+            work(state, RoomSettings(settings.id, settings.initialEnergy, settings.defaultTemperature, temp))
         }
 
       def makeOffer(state: RoomState, settings: RoomSettings) = {

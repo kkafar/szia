@@ -71,7 +71,7 @@ object SimulationManager extends JsonSupport {
               val futureResponses = roomAgents.map { case (id, agent) => agent.ask(GetInfo) }
               Try(Await.result(Future.sequence(futureResponses), Duration(settings.epochDuration, SECONDS))) match {
                 case Success(responses: List[RoomResponse]) => complete(AllRoomsResponse(responses))
-                case _ => complete(StatusCodes.InternalServerError, "Failed to process the request")
+                case Failure(exception) => failWith(exception)
               }
             }
           } ~

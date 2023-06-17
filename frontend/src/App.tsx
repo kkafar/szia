@@ -22,14 +22,15 @@ function App() {
 
   useEffect(() => {
     if (!initialDataFetched) {
-      const intervalHandle = setInterval(() => {
-        new SimulationService().getInitialConfiguration()
-          .then((response: SimulationSettings) => {
-            console.log(JSON.stringify(response));
-            setSimSettings(response);
-            setInitialDataFetched(true);
-          })
-          .catch(console.error)
+      const intervalHandle = setInterval(async () => {
+        const service = new SimulationService();
+        try {
+          const response: SimulationSettings = await service.getInitialConfiguration();
+          setSimSettings(response);
+          setInitialDataFetched(true);
+        } catch (error) {
+          console.error(error);
+        }
       });
       return () => clearInterval(intervalHandle);
     }

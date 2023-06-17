@@ -41,7 +41,7 @@ function App() {
       <Dashboard simulationSettings={simSettings} />
     );
   } else {
-    return (<div>Loading...</div>);
+    return (<div>Waiting for server response...</div>);
   }
 
 }

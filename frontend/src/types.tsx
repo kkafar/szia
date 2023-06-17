@@ -25,3 +25,7 @@ export type RoomInfo = {
   settings: RoomSettings,
   state: RoomState,
 }
+
+export type AllRoomsResponse = {
+  roomSettings: Array<RoomInfo>
+}

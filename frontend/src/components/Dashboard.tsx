@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import '../App.css';
 
 import { RoomInfo, SimulationSettings } from '../types';
-import axios from 'axios';
 import RoomList from './RoomList';
 import config from '../config.json';
 import ScorePlot from './ScorePlot';

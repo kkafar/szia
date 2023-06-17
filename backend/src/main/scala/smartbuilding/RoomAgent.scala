@@ -58,7 +58,7 @@ object RoomAgent {
       def updateState(state: RoomState, settings: RoomSettings, volume: Double, auctionId: Int) = {
         val powerAvailable = updatePowerAvailable(state, settings, volume)
         val output = updateControllerOutput(state, settings)
-        val powerConsumed = Math.min(Math.abs(output), powerAvailable)
+        val powerConsumed = Math.min(output, powerAvailable)
         val temperature = updateTemperature(state, settings, -powerConsumed)
         logger.info(s"$auctionId,$id,${settings.initialEnergy},${settings.defaultTemperature},${settings.desiredTemperature},$powerAvailable,$powerConsumed,$temperature")
         context.log.info(s"Agent $id was offered $volume of heat, pa: $powerAvailable, output: $output, pc: $powerConsumed")

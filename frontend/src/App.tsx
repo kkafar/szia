@@ -23,9 +23,8 @@ function App() {
   useEffect(() => {
     if (!initialDataFetched) {
       const intervalHandle = setInterval(async () => {
-        const service = new SimulationService();
         try {
-          const response: SimulationSettings = await service.getInitialConfiguration();
+          const response: SimulationSettings = await SimulationService.getInitialConfiguration();
           setSimSettings(response);
           setInitialDataFetched(true);
         } catch (error) {

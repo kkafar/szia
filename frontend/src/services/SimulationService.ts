@@ -1,4 +1,4 @@
-import { SimulationSettings } from "../types";
+import { AllRoomsResponse, SimulationSettings } from "../types";
 import config from '../config.json'
 import axios from "axios";
 
@@ -24,7 +24,7 @@ export class SimulationService {
     return responseData;
   }
 
-  static async getAllRoomsInformation() {
+  static async getAllRoomsInformation(): Promise<AllRoomsResponse> {
     let response;
     try {
       response = await axios({

@@ -22,14 +22,14 @@ function App() {
 
   useEffect(() => {
     if (!initialDataFetched) {
-      const intervalHandle = setInterval(() => {
-        new SimulationService().getInitialConfiguration()
-          .then((response: SimulationSettings) => {
-            console.log(JSON.stringify(response));
-            setSimSettings(response);
-            setInitialDataFetched(true);
-          })
-          .catch(console.error)
+      const intervalHandle = setInterval(async () => {
+        try {
+          const response: SimulationSettings = await SimulationService.getInitialConfiguration();
+          setSimSettings(response);
+          setInitialDataFetched(true);
+        } catch (error) {
+          console.error(error);
+        }
       });
       return () => clearInterval(intervalHandle);
     }
@@ -40,7 +40,7 @@ function App() {
       <Dashboard simulationSettings={simSettings} />
     );
   } else {
-    return (<div>Loading...</div>);
+    return (<div>Waiting for server response...</div>);
   }
 
 }
